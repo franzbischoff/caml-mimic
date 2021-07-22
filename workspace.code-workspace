@@ -1,0 +1,28 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"testExplorer.useNativeTesting": true,
+		"git.enableCommitSigning": false
+	},
+	"extensions": {
+		"recommendations": [
+			"donjayamanne.git-extension-pack",
+			"me-dutour-mathieu.vscode-github-actions",
+			"cschleiden.vscode-github-actions",
+			"donjayamanne.githistory",
+			"codezombiech.gitignore",
+			"spywhere.guides",
+			"ms-python.python",
+			"ms-toolsai.jupyter",
+			"ms-python.vscode-pylance",
+			"visualstudioexptteam.vscodeintellicode",
+			"spmeesseman.vscode-taskexplorer",
+			"natqe.reload",
+			"nhoizey.gremlins"
+		]
+	}
+}
