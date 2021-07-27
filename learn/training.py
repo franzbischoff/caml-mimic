@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 import csv
 import argparse
-import os 
+import os
 import numpy as np
 import operator
 import random
@@ -16,6 +16,8 @@ import sys
 import time
 from tqdm import tqdm
 from collections import defaultdict
+
+sys.path.append('../')
 
 from constants import *
 import datasets
@@ -52,7 +54,7 @@ def init(args):
         optimizer = None
 
     params = tools.make_param_dict(args)
-    
+
     return args, model, optimizer, params, dicts
 
 def train_epochs(args, model, optimizer, params, dicts):
@@ -74,7 +76,7 @@ def train_epochs(args, model, optimizer, params, dicts):
         elif args.test_model:
             model_dir = os.path.dirname(os.path.abspath(args.test_model))
         metrics_all = one_epoch(model, optimizer, args.Y, epoch, args.n_epochs, args.batch_size, args.data_path,
-                                                  args.version, test_only, dicts, model_dir, 
+                                                  args.version, test_only, dicts, model_dir,
                                                   args.samples, args.gpu, args.quiet)
         for name in metrics_all[0].keys():
             metrics_hist[name].append(metrics_all[0][name])
@@ -103,15 +105,15 @@ def train_epochs(args, model, optimizer, params, dicts):
 def early_stop(metrics_hist, criterion, patience):
     if not np.all(np.isnan(metrics_hist[criterion])):
         if len(metrics_hist[criterion]) >= patience:
-            if criterion == 'loss_dev': 
+            if criterion == 'loss_dev':
                 return np.nanargmin(metrics_hist[criterion]) < len(metrics_hist[criterion]) - patience
             else:
                 return np.nanargmax(metrics_hist[criterion]) < len(metrics_hist[criterion]) - patience
     else:
         #keep training if criterion results have all been nan so far
         return False
-        
-def one_epoch(model, optimizer, Y, epoch, n_epochs, batch_size, data_path, version, testing, dicts, model_dir, 
+
+def one_epoch(model, optimizer, Y, epoch, n_epochs, batch_size, data_path, version, testing, dicts, model_dir,
               samples, gpu, quiet):
     """
         Wrapper to do a training epoch and test on dev
@@ -149,7 +151,7 @@ def one_epoch(model, optimizer, Y, epoch, n_epochs, batch_size, data_path, versi
                    testing)
     if testing or epoch == n_epochs - 1:
         print("\nevaluating on test")
-        metrics_te = test(model, Y, epoch, data_path, "test", gpu, version, unseen_code_inds, dicts, samples, 
+        metrics_te = test(model, Y, epoch, data_path, "test", gpu, version, unseen_code_inds, dicts, samples,
                           model_dir, True)
     else:
         metrics_te = defaultdict(float)
@@ -180,7 +182,10 @@ def train(model, optimizer, Y, epoch, batch_size, data_path, gpu, version, dicts
     gen = datasets.data_generator(data_path, dicts, batch_size, num_labels, version=version, desc_embed=desc_embed)
     for batch_idx, tup in tqdm(enumerate(gen)):
         data, target, _, code_set, descs = tup
-        data, target = Variable(torch.LongTensor(data)), Variable(torch.FloatTensor(target))
+        # data, target = Variable(torch.LongTensor(data)), Variable(torch.FloatTensor(target))
+        data = torch.LongTensor(data)
+        target = torch.FloatTensor(target)
+
         unseen_code_inds = unseen_code_inds.difference(code_set)
         if gpu:
             data = data.cuda()
@@ -197,7 +202,7 @@ def train(model, optimizer, Y, epoch, batch_size, data_path, gpu, version, dicts
         loss.backward()
         optimizer.step()
 
-        losses.append(loss.data[0])
+        losses.append(loss.item())
 
         if not quiet and batch_idx % print_every == 0:
             #print the average loss of the last 10 batches
@@ -213,7 +218,7 @@ def unseen_code_vecs(model, code_inds, dicts, gpu):
     code_inds, vecs = code_vecs
     #wrap it in an array so it's 3d
     desc_embeddings = model.embed_descriptions([vecs], gpu)[0]
-    #replace relevant final_layer weights with desc embeddings 
+    #replace relevant final_layer weights with desc embeddings
     model.final.weight.data[code_inds, :] = desc_embeddings.data
     model.final.bias.data[code_inds] = 0
 
@@ -243,7 +248,9 @@ def test(model, Y, epoch, data_path, fold, gpu, version, code_inds, dicts, sampl
     gen = datasets.data_generator(filename, dicts, 1, num_labels, version=version, desc_embed=desc_embed)
     for batch_idx, tup in tqdm(enumerate(gen)):
         data, target, hadm_ids, _, descs = tup
-        data, target = Variable(torch.LongTensor(data), volatile=True), Variable(torch.FloatTensor(target))
+        with torch.no_grad():
+            data = torch.LongTensor(data)
+            target = torch.FloatTensor(target)
         if gpu:
             data = data.cuda()
             target = target.cuda()
@@ -258,9 +265,9 @@ def test(model, Y, epoch, data_path, fold, gpu, version, code_inds, dicts, sampl
         get_attn = samples and (np.random.rand() < 0.02 or (fold == 'test' and testing))
         output, loss, alpha = model(data, target, desc_data=desc_data, get_attention=get_attn)
 
-        output = F.sigmoid(output)
+        output = torch.sigmoid(output)
         output = output.data.cpu().numpy()
-        losses.append(loss.data[0])
+        losses.append(loss.item())
         target_data = target.data.cpu().numpy()
         if get_attn and samples:
             interpret.save_samples(data, output, target_data, alpha, window_size, epoch, tp_file, fp_file, dicts=dicts)
@@ -315,7 +322,7 @@ if __name__ == "__main__":
     parser.add_argument("--num-filter-maps", type=int, required=False, dest="num_filter_maps", default=50,
                         help="size of conv output (default: 50)")
     parser.add_argument("--pool", choices=['max', 'avg'], required=False, dest="pool", help="which type of pooling to do (logreg model only)")
-    parser.add_argument("--code-emb", type=str, required=False, dest="code_emb", 
+    parser.add_argument("--code-emb", type=str, required=False, dest="code_emb",
                         help="point to code embeddings to use for parameter initialization, if applicable")
     parser.add_argument("--weight-decay", type=float, required=False, dest="weight_decay", default=0,
                         help="coefficient for penalizing l2 norm of model weights (default: 0)")
