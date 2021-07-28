@@ -7,7 +7,8 @@
 	"settings": {
 		"testExplorer.useNativeTesting": true,
 		"git.enableCommitSigning": false,
-		"git.ignoreLimitWarning": true
+		"git.ignoreLimitWarning": true,
+		"python.pythonPath": ".venv\\Scripts\\python.exe"
 	},
 	"extensions": {
 		"recommendations": [

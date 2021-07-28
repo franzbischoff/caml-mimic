@@ -10,7 +10,7 @@ from constants import MIMIC_3_DIR
 
 import pandas as pd
 
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+DATETIME_FORMAT = "%Y-%m-%d %H-%M-%S"
 
 def concat_data(labelsfile, notes_file):
     """
@@ -39,11 +39,11 @@ def concat_data(labelsfile, notes_file):
                     else:
                         print("couldn't find matching hadm_id. data is probably not sorted correctly")
                         break
-                    
+
     return outfilename
 
 def split_data(labeledfile, base_name):
-    print("SPLITTING")
+    print("SPLITTING2")
     #create and write headers for train, dev, test
     train_name = '%s_train_split.csv' % (base_name)
     dev_name = '%s_dev_split.csv' % (base_name)
@@ -74,22 +74,23 @@ def split_data(labeledfile, base_name):
             if i % 10000 == 0:
                 print(str(i) + " read")
 
-            hadm_id = row[1]
+            if len(row) > 0: # windows fix
+                hadm_id = row[1]
 
-            if hadm_id in hadm_ids['train']:
-                train_file.write(','.join(row) + "\n")
-            elif hadm_id in hadm_ids['dev']:
-                dev_file.write(','.join(row) + "\n")
-            elif hadm_id in hadm_ids['test']:
-                test_file.write(','.join(row) + "\n")
+                if hadm_id in hadm_ids['train']:
+                    train_file.write(','.join(row) + "\n")
+                elif hadm_id in hadm_ids['dev']:
+                    dev_file.write(','.join(row) + "\n")
+                elif hadm_id in hadm_ids['test']:
+                    test_file.write(','.join(row) + "\n")
 
-            i += 1
+                i += 1
 
         train_file.close()
         dev_file.close()
         test_file.close()
     return train_name, dev_name, test_name
-    
+
 def next_labels(labelsfile):
     """
         Generator for label sets from the label file
@@ -133,7 +134,7 @@ def next_notes(notesfile):
     cur_subj = int(first_note[0])
     cur_hadm = int(first_note[1])
     cur_text = first_note[3]
-    
+
     for row in nr:
         subj_id = int(row[0])
         hadm_id = int(row[1])

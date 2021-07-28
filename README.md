@@ -4,18 +4,31 @@
 
 Code for the paper [Explainable Prediction of Medical Codes from Clinical Text](https://arxiv.org/abs/1802.05695).
 
+## Before starting
+
+I made some changes in James' code. Mainly some fixes for using new libraries and some workarounds for not breaking on Windows.
+I could not test WSL2 Cuda yet, so the only GPU environment I got so far was the native windows CUDA with `torch==1.9.0+cu111`.
+
+The scripts inside the `predictions` folder were changed so you can run them from the script location and the PATH will be figured out.
+
+It is advised to create an environment in the root of the project as follows:
+
+`python -m venv .venv`
+
+and update pip:
+
+`python -m pip install –upgrade pip`
+
+If you get trouble installing torch, try this site: <https://pytorch.org/get-started/locally/>
+
 ## Dependencies
-* Python 3.6, though 2.7 should hopefully work as well
-* pytorch 0.3.0
-* tqdm
-* scikit-learn 0.19.1
-* numpy 1.13.3, scipy 0.19.1, pandas 0.20.3
-* jupyter-notebook 5.0.0
-* gensim 3.2.0
-* nltk 3.2.4
+Tested with Python 3.9x
 
-Other versions may also work, but the ones listed are the ones I've used
+Install the requirements as following:
 
+`pip install -r requirements.txt`
+
+On windows, use `requirements_win.txt` and if you want to use CUDA, install `requirements_win_cuda11.txt`
 
 ## Data processing
 
@@ -38,7 +51,7 @@ mimicdata
 ```
 The MIMIC-II files can be obtained from [this repository](https://physionet.org/works/ICD9CodingofDischargeSummaries/).
 
-Now, make sure your python path includes the base directory of this repository. Then, in Jupyter Notebook, run all cells (in the menu, click Cell -> Run All) in `notebooks/dataproc_mimic_II.ipynb` and `notebooks/dataproc_mimic_III.ipynb`. These will take some time, so go for a walk or bake some cookies while you wait. You can speed it up by skipping the "Pre-train word embeddings" sections. 
+Now, make sure your python path includes the base directory of this repository. Then, in Jupyter Notebook, run all cells (in the menu, click Cell -> Run All) in `notebooks/dataproc_mimic_II.ipynb` and `notebooks/dataproc_mimic_III.ipynb`. These will take some time, so go for a walk or bake some cookies while you wait. You can speed it up by skipping the "Pre-train word embeddings" sections.
 
 ## Saved models
 
@@ -50,7 +63,7 @@ To train a new model from scratch, please use the script `learn/training.py`. Ex
 
 ## Model predictions
 
-The predictions that provide the results in the paper are provided in `predictions/`. Each directory contains: 
+The predictions that provide the results in the paper are provided in `predictions/`. Each directory contains:
 
 * `preds_test.psv`, a pipe-separated value file containing the HADM_ID's and model predictions of all testing examples
 * `train_new_model.sh`, which trains a new model with the hyperparameters provided in the paper.

@@ -155,7 +155,8 @@ def load_lookups(args, desc_embed=False):
         with open("%s/TOP_%s_CODES.csv" % (MIMIC_3_DIR, str(args.Y)), 'r') as labelfile:
             lr = csv.reader(labelfile)
             for i,row in enumerate(lr):
-                codes.add(row[0])
+                if len(row) > 0: # windows fix
+                    codes.add(row[0])
         ind2c = {i:c for i,c in enumerate(sorted(codes))}
         desc_dict = load_code_descriptions()
     c2ind = {c:i for i,c in ind2c.items()}
@@ -207,7 +208,7 @@ def load_full_codes(train_path, version='mimic3'):
 def reformat(code, is_diag):
     """
         Put a period in the right place because the MIMIC-3 data files exclude them.
-        Generally, procedure codes have dots after the first two digits, 
+        Generally, procedure codes have dots after the first two digits,
         while diagnosis codes have dots after the first three digits.
     """
     code = ''.join(code.split('.'))

@@ -38,7 +38,7 @@ def init(args):
         Load data, build model, create optimizer, create vars to hold metrics, etc.
     """
     #need to handle really large text fields
-    csv.field_size_limit(sys.maxsize)
+    csv.field_size_limit(2**31-1) # windows fix (instead of sys.maxsize)
 
     #load vocab and other lookups
     desc_embed = args.lmbda > 0
@@ -71,7 +71,7 @@ def train_epochs(args, model, optimizer, params, dicts):
     for epoch in range(args.n_epochs):
         #only test on train/test set on very last epoch
         if epoch == 0 and not args.test_model:
-            model_dir = os.path.join(MODEL_DIR, '_'.join([args.model, time.strftime('%b_%d_%H:%M:%S', time.localtime())]))
+            model_dir = os.path.join(MODEL_DIR, '_'.join([args.model, time.strftime('%b_%d_%H-%M-%S', time.localtime())]))
             os.mkdir(model_dir)
         elif args.test_model:
             model_dir = os.path.dirname(os.path.abspath(args.test_model))

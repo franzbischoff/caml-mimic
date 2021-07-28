@@ -154,4 +154,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-{"mode":"full","isActive":false}
+
+.vscode/settings.json
+/predictions/**/*.json
